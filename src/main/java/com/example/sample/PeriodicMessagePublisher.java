@@ -1,8 +1,8 @@
-package com.addepar.sample;
+package com.example.sample;
 
-import com.addepar.sample.messaging.SampleMessage;
-import com.addepar.sample.messaging.SampleMessageConsumer;
-import com.addepar.sample.messaging.SampleMessagePublisher;
+import com.example.sample.messaging.SampleMessage;
+import com.example.sample.messaging.SampleMessageConsumer;
+import com.example.sample.messaging.SampleMessagePublisher;
 import io.quarkus.scheduler.Scheduled;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,4 +1,4 @@
-package com.addepar.sample.messaging;
+package com.example.sample.messaging;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;

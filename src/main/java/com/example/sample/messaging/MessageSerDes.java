@@ -1,4 +1,4 @@
-package com.addepar.sample.messaging;
+package com.example.sample.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.kafka.client.serialization.ObjectMapperDeserializer;

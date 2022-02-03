@@ -1,4 +1,4 @@
-package com.addepar.sample.messaging;
+package com.example.sample.messaging;
 
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;

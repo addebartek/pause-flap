@@ -1,4 +1,4 @@
-package com.addepar.sample.messaging;
+package com.example.sample.messaging;
 
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.reactive.messaging.kafka.KafkaClientService;
