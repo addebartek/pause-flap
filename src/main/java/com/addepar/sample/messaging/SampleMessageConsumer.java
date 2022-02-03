@@ -18,17 +18,63 @@ public class SampleMessageConsumer {
 
 
   KafkaClientService kafkaClientService;
+  int count;
 
   @Inject
   public SampleMessageConsumer(KafkaClientService kafkaClientService) {
     this.kafkaClientService = kafkaClientService;
+    int count = 0;
   }
 
   @Incoming("sample-consume-channel")
   @Blocking
   void consume(SampleMessage message) {
-    logger.info("Received: {}", message);
-    logger.info("pausing {}", kafkaClientService.getConsumer("sample-consume-channel").pause().await().indefinitely());
-    logger.info("done pausing");
+    if (count == 0) {
+        // we sleep on receiving the first message, block the following messages until wake up
+      try {
+        logger.info("before sleep");
+
+        kafkaClientService
+                .getConsumer("sample-consume-channel")
+                .paused()
+                .await()
+                .indefinitely()
+                .forEach(topicPartition -> logger.info("paused: {}", topicPartition.topic()));
+
+        // we sleep for 30 sec for the smallrye buffer to be filled
+        Thread.sleep(30000);
+
+        logger.info("after sleep");
+
+        kafkaClientService
+                .getConsumer("sample-consume-channel")
+                .paused()
+                .await()
+                .indefinitely()
+                .forEach(topicPartition -> logger.info("paused: {}", topicPartition.topic()));
+
+        logger.info("after pausing");
+        logger.error("pausing {}", kafkaClientService.getConsumer("sample-consume-channel").pause().await().indefinitely());
+        logger.info("done pausing");
+
+        kafkaClientService
+                .getConsumer("sample-consume-channel")
+                .paused()
+                .await()
+                .indefinitely()
+                .forEach(topicPartition -> logger.info("paused: {}", topicPartition.topic()));
+
+      } catch (Exception ex) {
+        // do nothing
+      }
+    }
+    count++;
+    logger.info("Received: {} {}", count, message);
+    kafkaClientService
+            .getConsumer("sample-consume-channel")
+            .paused()
+            .await()
+            .indefinitely()
+            .forEach(topicPartition -> logger.info("paused: {}", topicPartition.topic()));
   }
 }
