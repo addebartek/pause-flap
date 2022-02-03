@@ -1,4 +1,4 @@
-package com.example.sample.messaging;
+package com.example;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.kafka.client.serialization.ObjectMapperDeserializer;
@@ -9,17 +9,17 @@ import io.quarkus.kafka.client.serialization.ObjectMapperSerializer;
  */
 public class MessageSerDes {
 
-  public static class MessageSerializer extends ObjectMapperSerializer<SampleMessage> {
+  public static class MessageSerializer extends ObjectMapperSerializer<Message> {
 
     public MessageSerializer() {
       super(new ObjectMapper());
     }
   }
 
-  public static class MessageDeserializer extends ObjectMapperDeserializer<SampleMessage> {
+  public static class MessageDeserializer extends ObjectMapperDeserializer<Message> {
 
     public MessageDeserializer() {
-      super(SampleMessage.class);
+      super(Message.class);
     }
   }
 }

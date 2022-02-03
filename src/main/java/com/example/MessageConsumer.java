@@ -1,4 +1,4 @@
-package com.example.sample.messaging;
+package com.example;
 
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.reactive.messaging.kafka.KafkaClientService;
@@ -15,17 +15,17 @@ import java.util.Set;
  * @author Michael Fang (michael.fang@addepar.com)
  */
 @ApplicationScoped
-public class SampleMessageConsumer {
-  private static final Logger logger = LoggerFactory.getLogger(SampleMessageConsumer.class);
+public class MessageConsumer {
+  private static final Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
 
 
   KafkaClientService kafkaClientService;
   int count;
 
   @Inject
-  public SampleMessageConsumer(KafkaClientService kafkaClientService) {
+  public MessageConsumer(KafkaClientService kafkaClientService) {
     this.kafkaClientService = kafkaClientService;
-    int count = 0;
+    int count = 1;
   }
 
   /**
@@ -38,9 +38,10 @@ public class SampleMessageConsumer {
    */
   @Incoming("sample-consume-channel")
   @Blocking
-  void consume(SampleMessage message) {
+  void consume(Message message) {
+    logger.info("Message {} received", count);
     Set<String> pausedTopicSubscription = new HashSet<>();
-    if (count == 0) {
+    if (count == 1) {
         // we sleep on receiving the first message, block the following messages until wake up
       try {
         logger.info("now taking 5s to process the first message");
@@ -48,21 +49,20 @@ public class SampleMessageConsumer {
         // the upstream buffer is kafka.max-queue-size-factor * poll.records = 1 * 2 = 2
         Thread.sleep(5000);
 
-        logger.info("consumer wakes up");
-        logger.error("pausing {}", kafkaClientService.getConsumer("sample-consume-channel").pause().await().indefinitely());
+        logger.error("pausing channel {}", kafkaClientService.getConsumer("sample-consume-channel").pause().await().indefinitely());
       } catch (Exception ex) {
         // do nothing
       }
     }
     count++;
-    logger.info("Received: {} {}", count, message);
+
     kafkaClientService
             .getConsumer("sample-consume-channel")
             .paused()
             .await()
             .indefinitely()
             .forEach(topicPartition -> pausedTopicSubscription.add(topicPartition.topic()));
-    logger.info("paused topic subscription: {}", pausedTopicSubscription);
+    logger.info("list of paused channels: {}", pausedTopicSubscription);
   }
 
 }
