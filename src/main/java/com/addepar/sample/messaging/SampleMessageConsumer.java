@@ -10,7 +10,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 /**
- * @author Naveen Kasthuri (naveen.kasthuri@addepar.com)
+ * @author Michael Fang (michael.fang@addepar.com)
  */
 @ApplicationScoped
 public class SampleMessageConsumer {
@@ -54,11 +54,8 @@ public class SampleMessageConsumer {
         // the upstream buffer is kafka.max-queue-size-factor * poll.records = 1 * 2 = 2
         Thread.sleep(5000);
 
-        logger.info("after sleep");
-
-        logger.info("after pausing");
+        logger.info("consumer wakes up");
         logger.error("pausing {}", kafkaClientService.getConsumer("sample-consume-channel").pause().await().indefinitely());
-        logger.info("done pausing");
 
         // verify that the sample channel is disabled
         kafkaClientService

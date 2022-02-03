@@ -5,7 +5,7 @@ import com.google.common.base.MoreObjects;
 import org.apache.commons.lang3.RandomStringUtils;
 
 /**
- * @author Naveen Kasthuri (naveen.kasthuri@addepar.com)
+ * @author Michael Fang (michael.fang@addepar.com)
  */
 public final class SampleMessage {
 

@@ -11,7 +11,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 /**
- * @author Naveen Kasthuri (naveen.kasthuri@addepar.com)
+ * @author Michael Fang (michael.fang@addepar.com)
  */
 @ApplicationScoped
 public class PeriodicMessagePublisher {

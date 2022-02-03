@@ -5,7 +5,7 @@ import io.quarkus.kafka.client.serialization.ObjectMapperDeserializer;
 import io.quarkus.kafka.client.serialization.ObjectMapperSerializer;
 
 /**
- * @author Naveen Kasthuri (naveen.kasthuri@addepar.com)
+ * @author Michael Fang (michael.fang@addepar.com)
  */
 public class MessageSerDes {
 
