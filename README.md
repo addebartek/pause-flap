@@ -4,19 +4,18 @@ This project demonstrate SmallRye's Internal State Inconsistency when using Kafk
 to pause/resume channel
 
 ## Running the application in dev mode
-simply run ./mvnw compile quarkus:dev
+simply run `./mvnw compile quarkus:dev`
 
 ## General flow
-The `SampleMessageConsumer` when receiving first message will go to sleep for 5 seconds and then
-pause the channel `sample` while `SampleMessagePublisher` will periodically send message
+The `MessageConsumer` when receiving first message will go to sleep for 5 seconds and then
+pause the channel `sample` while `PeriodicMessagePublisher` will periodically send message
 through `sample` channel every second. 
 
 ### expected
-After the channel is paused, the `consumer` can no longer receive new messages.
-The `consumer` will not log further new messages received(those sent out afer 5 secs) 
+After the channel is paused, the `consumer` will eventually stop receiving messages (after the internal smallrye buffer is drained).
 
 ### reality
-The `consumer` will log further messages sent from publisher after 5 seconds
+The channel gets unpaused and the `consumer` keeps receiving messages.
 
 ### explanation
 
@@ -26,10 +25,10 @@ indicate if a channel is paused or not.
 2. The `KafkaRecordStreamSubscription` which polls records from the given consumer client 
 and emits records downstream also keeps an internal states.
 
-3. In this demonstration, after the `sampleMessageConsumer` paused the channel using `KafkaClientService`, the `KafkaRecordStreamSubscription` 
+3. In this demonstration, after the `MessageConsumer` paused the channel using `KafkaClientService`, the `KafkaRecordStreamSubscription` 
 internal state is still `STATE_POLLING` while `ReactiveKafkaConsumer`'s internal state became `paused`.
 
-4. after 5 secs its buffer will be full because downstream `SampleMessageConsumer` is blocking(sleeping).
+4. after 5 secs its buffer will be full because downstream `MessageConsumer` is blocking(sleeping).
 
 5. `KafkaRecordStreamSubscription` will call `pauseResume()` to change state to `STATE_PAUSED` because the buffer is full.
 
