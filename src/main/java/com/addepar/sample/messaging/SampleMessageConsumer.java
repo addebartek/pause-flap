@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Michael Fang (michael.fang@addepar.com)
@@ -28,8 +30,7 @@ public class SampleMessageConsumer {
 
   /**
    * Reproduce the scenario where we pause the channel which will later be unpaused automatically after smallrye's upstream buffer
-   * is drained, this behavior is determined by `pause-if-no-requests`. All messages will be stored in smallrye's upstream buffer
-   * and then emit to downstream consumer
+   * is drained, this behavior is determined by `pause-if-no-requests`.
    *
    * expected: after first message, the channel is disabled and no further message will be processed
    *
@@ -38,33 +39,17 @@ public class SampleMessageConsumer {
   @Incoming("sample-consume-channel")
   @Blocking
   void consume(SampleMessage message) {
+    Set<String> pausedTopicSubscription = new HashSet<>();
     if (count == 0) {
         // we sleep on receiving the first message, block the following messages until wake up
       try {
-        logger.info("before sleep");
-
-        kafkaClientService
-                .getConsumer("sample-consume-channel")
-                .paused()
-                .await()
-                .indefinitely()
-                .forEach(topicPartition -> logger.info("paused: {}", topicPartition.topic()));
-
+        logger.info("now taking 5s to process the first message");
         // we sleep for 5 sec for the upstream buffer to be filled,
         // the upstream buffer is kafka.max-queue-size-factor * poll.records = 1 * 2 = 2
         Thread.sleep(5000);
 
         logger.info("consumer wakes up");
         logger.error("pausing {}", kafkaClientService.getConsumer("sample-consume-channel").pause().await().indefinitely());
-
-        // verify that the sample channel is disabled
-        kafkaClientService
-                .getConsumer("sample-consume-channel")
-                .paused()
-                .await()
-                .indefinitely()
-                .forEach(topicPartition -> logger.info("paused: {}", topicPartition.topic()));
-
       } catch (Exception ex) {
         // do nothing
       }
@@ -76,6 +61,8 @@ public class SampleMessageConsumer {
             .paused()
             .await()
             .indefinitely()
-            .forEach(topicPartition -> logger.info("paused: {}", topicPartition.topic()));
+            .forEach(topicPartition -> pausedTopicSubscription.add(topicPartition.topic()));
+    logger.info("paused topic subscription: {}", pausedTopicSubscription);
   }
+
 }
