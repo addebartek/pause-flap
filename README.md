@@ -1,54 +1,36 @@
-# messaging-service Project
+# Pause-Flap
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
-
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+This project demonstrate SmallRye's Internal State Inconsistency when using KafkaClientService
+to pause/resume channel
 
 ## Running the application in dev mode
+1. Uncomment redpanda in application.properties if no existing kafka is setup and running
 
-You can run your application in dev mode that enables live coding using:
-```shell script
-./mvnw compile quarkus:dev
-```
+2. ./mvnw compile quarkus:dev
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at http://localhost:8080/q/dev/.
+## General flow
+The `SampleMessageConsumer` when receiving first message will go to sleep for 5 seconds and then
+pause the channel `sample` while `SampleMessagePublisher` will periodically send message
+through `sample` channel every second. 
 
-## Packaging and running the application
+### expected
+After the channel is paused, the `publisher` can't no longer send new message to the `consumer`.
+The `consumer` will not log further new messages received(those sent out afer 5 secs) 
 
-The application can be packaged using:
-```shell script
-./mvnw package
-```
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+### reality
+The `consumer` will log further messages sent from publisher after 5 seconds
 
-If you want to build an _über-jar_, execute the following command:
-```shell script
-./mvnw package -Dquarkus.package.type=uber-jar
-```
+### explanation
+The `KafkaClientService` returns `ReactiveKafkaConsumer` which has internal state `paused` to 
+indicate if a channel is paused or not. The `KafkaRecordStreamSubscription` which polls records from the given consumer client 
+and emits records downstream also keeps an internal states. In this demonstration,
+after the `sampleMessageConsumer` paused the channel using `KafkaClientService`, the `KafkaRecordStreamSubscription` 
+internal state is still `STATE_POLLING` while `ReactiveKafkaConsumer`'s internal state became `paused`,
+and after 5 secs its buffer will be full because downstream `SampleMessageConsumer` is blocking(sleeping).
+The `KafkaRecordStreamSubscription` will call `pauseResume()` to change state to `STATE_PAUSED` because the buffer is full.
+When the `sampleMessageConsumer` wakes up and process the message from `KafkaRecordStreamSubscription`'s internal buffer,
+all the messages will be drained and its method `pauseResume()` will be called to check if the number of records in buffer is smaller
+than half of its internal buffer's `maxQueueSize`(max_poll_records * max_queue_size_factor), 
+if so, it will change the state to `STATE_POLLING` and resume the channel. There are inconsistencies within
+SmallRye's packages which reproduce this conflict of channel pausing/resuming.
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-## Creating a native executable
-
-You can create a native executable using:
-```shell script
-./mvnw package -Pnative
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
-```shell script
-./mvnw package -Pnative -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./target/messaging-service-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.html.
-
-## Provided Code
-
-### RESTEasy JAX-RS
-
-Easily start your RESTful Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started#the-jax-rs-resources)
