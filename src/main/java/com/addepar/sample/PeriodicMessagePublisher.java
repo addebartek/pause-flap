@@ -21,7 +21,7 @@ public class PeriodicMessagePublisher {
   @Inject
   SampleMessagePublisher sampleMessagePublisher;
 
-  @Scheduled(every="5s")
+  @Scheduled(every="1s")
   void increment() {
 
     logger.warn("sent out msg");

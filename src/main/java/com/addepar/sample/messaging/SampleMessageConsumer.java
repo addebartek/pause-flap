@@ -26,6 +26,14 @@ public class SampleMessageConsumer {
     int count = 0;
   }
 
+  /**
+   * Reproduce the scenario where we pause the channel which will later be unpaused automatically after smallrye's buffer
+   * is drained, this behavior is determined by `pause-if-no-requests`
+   *
+   * expected: after first message, the channel is disabled and no further message will be processed
+   *
+   * reality: after buffer is drained, the channel will be enabled
+   */
   @Incoming("sample-consume-channel")
   @Blocking
   void consume(SampleMessage message) {
@@ -41,22 +49,17 @@ public class SampleMessageConsumer {
                 .indefinitely()
                 .forEach(topicPartition -> logger.info("paused: {}", topicPartition.topic()));
 
-        // we sleep for 30 sec for the smallrye buffer to be filled
-        Thread.sleep(30000);
+        // we sleep for 5 sec for the smallrye buffer to be filled,
+        // the buffer is kafka.max-queue-size-factor * poll.records = 1 * 2 = 2
+        Thread.sleep(5000);
 
         logger.info("after sleep");
-
-        kafkaClientService
-                .getConsumer("sample-consume-channel")
-                .paused()
-                .await()
-                .indefinitely()
-                .forEach(topicPartition -> logger.info("paused: {}", topicPartition.topic()));
 
         logger.info("after pausing");
         logger.error("pausing {}", kafkaClientService.getConsumer("sample-consume-channel").pause().await().indefinitely());
         logger.info("done pausing");
 
+        // verify that the sample channel is disabled
         kafkaClientService
                 .getConsumer("sample-consume-channel")
                 .paused()
