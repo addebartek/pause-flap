@@ -27,8 +27,9 @@ public class SampleMessageConsumer {
   }
 
   /**
-   * Reproduce the scenario where we pause the channel which will later be unpaused automatically after smallrye's buffer
-   * is drained, this behavior is determined by `pause-if-no-requests`
+   * Reproduce the scenario where we pause the channel which will later be unpaused automatically after smallrye's upstream buffer
+   * is drained, this behavior is determined by `pause-if-no-requests`. All messages will be stored in smallrye's upstream buffer
+   * and then emit to downstream consumer
    *
    * expected: after first message, the channel is disabled and no further message will be processed
    *
@@ -49,8 +50,8 @@ public class SampleMessageConsumer {
                 .indefinitely()
                 .forEach(topicPartition -> logger.info("paused: {}", topicPartition.topic()));
 
-        // we sleep for 5 sec for the smallrye buffer to be filled,
-        // the buffer is kafka.max-queue-size-factor * poll.records = 1 * 2 = 2
+        // we sleep for 5 sec for the upstream buffer to be filled,
+        // the upstream buffer is kafka.max-queue-size-factor * poll.records = 1 * 2 = 2
         Thread.sleep(5000);
 
         logger.info("after sleep");
