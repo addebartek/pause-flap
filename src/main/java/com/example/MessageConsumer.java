@@ -20,12 +20,11 @@ public class MessageConsumer {
 
 
   KafkaClientService kafkaClientService;
-  int count;
+  int count = 1;
 
   @Inject
   public MessageConsumer(KafkaClientService kafkaClientService) {
     this.kafkaClientService = kafkaClientService;
-    int count = 1;
   }
 
   /**
